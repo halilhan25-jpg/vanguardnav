@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VanguardNav</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
-      --glass-bg: rgba(18, 22, 28, 0.76);
+      --glass-bg: rgba(18, 22, 28, 0.78);
       --glass-card: rgba(255, 255, 255, 0.08);
       --glass-border: rgba(255, 255, 255, 0.16);
       --text-main: #f8fafc;
@@ -19,9 +19,8 @@
       --grid-line: rgba(255, 255, 255, 0.14);
       --map-bg: #0b0f14;
     }
-
     [data-theme="daylight"] {
-      --glass-bg: rgba(255, 255, 255, 0.88);
+      --glass-bg: rgba(255, 255, 255, 0.9);
       --glass-card: rgba(0, 0, 0, 0.06);
       --glass-border: rgba(0, 0, 0, 0.18);
       --text-main: #090d16;
@@ -33,9 +32,8 @@
       --grid-line: rgba(0, 0, 0, 0.16);
       --map-bg: #e5e7eb;
     }
-
     [data-theme="red"] {
-      --glass-bg: rgba(12, 0, 0, 0.88);
+      --glass-bg: rgba(12, 0, 0, 0.9);
       --glass-card: rgba(239, 68, 68, 0.1);
       --glass-border: rgba(239, 68, 68, 0.4);
       --text-main: #ef4444;
@@ -47,17 +45,9 @@
       --grid-line: rgba(239, 68, 68, 0.22);
       --map-bg: #050000;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--map-bg);
       color: var(--text-main);
       height: 100dvh;
@@ -65,35 +55,17 @@
       overflow: hidden;
       position: relative;
     }
-
-    /* TAM EKRAN HARİTA */
-    #map {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--map-bg);
-      z-index: 1;
-    }
-
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--map-bg); z-index: 1; }
     [data-theme="red"] .leaflet-tile-pane {
       filter: invert(100%) sepia(100%) saturate(650%) hue-rotate(320deg) brightness(60%) contrast(135%);
     }
-
     .offline-grid {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      position: absolute; inset: 0; pointer-events: none; z-index: 2; display: none;
+      background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
       background-size: 40px 40px;
-      z-index: 2;
-      display: none;
     }
     .offline-grid.visible { display: block; }
-
-    /* CAM (LIQUID GLASS) ORTAK SINIFI */
     .glass {
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
@@ -101,447 +73,122 @@
       border: 1px solid var(--glass-border);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
     }
-
-    /* 1. ÜST PUSULA VE GPS KAPSÜLÜ */
     .top-hud {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      height: 42px;
-      border-radius: 21px;
-      display: flex;
-      align-items: center;
-      padding: 0 12px 0 8px;
-      gap: 8px;
-      z-index: 1000;
+      position: absolute; top: 10px; left: 10px; right: 10px; height: 42px;
+      border-radius: 21px; display: flex; align-items: center;
+      padding: 0 12px 0 8px; gap: 8px; z-index: 1000;
     }
-
     .compass-viewport {
-      position: relative;
-      flex: 1;
-      height: 28px;
-      overflow: hidden;
-      mask-image: linear-gradient(to right, transparent, black 18%, black 82%, transparent);
-      -webkit-mask-image: linear-gradient(to right, transparent, black 18%, black 82%, transparent);
+      position: relative; flex: 1; height: 28px; overflow: hidden;
+      mask-image: linear-gradient(to right, transparent, black 16%, black 84%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 16%, black 84%, transparent);
     }
-
     .compass-center-pin {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: #ef4444;
-      transform: translateX(-50%);
-      z-index: 5;
+      position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+      background: #ef4444; transform: translateX(-50%); z-index: 5;
     }
     .compass-center-pin::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -4px;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid #ef4444;
+      content: ""; position: absolute; top: 0; left: -4px;
+      border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #ef4444;
     }
-
     .compass-strip {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      display: flex;
-      align-items: flex-end;
-      padding-bottom: 3px;
-      will-change: transform;
+      position: absolute; top: 0; left: 0; height: 100%;
+      display: flex; align-items: flex-end; padding-bottom: 3px; will-change: transform;
     }
-
-    .c-tick {
-      width: 10px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .c-tick-label {
-      font-size: 10px;
-      font-weight: 800;
-      margin-bottom: 2px;
-      color: var(--text-main);
-    }
+    .c-tick { width: 10px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+    .c-tick-label { font-size: 10px; font-weight: 800; margin-bottom: 2px; color: var(--text-main); }
     .c-tick-label.north { color: #ef4444; font-weight: 900; }
-
-    .c-tick-line {
-      width: 1px;
-      height: 6px;
-      background: var(--text-muted);
-      opacity: 0.6;
-    }
-    .c-tick-line.major {
-      height: 10px;
-      width: 1.5px;
-      background: var(--text-main);
-      opacity: 0.9;
-    }
-
-    .hud-divider {
-      width: 1px;
-      height: 20px;
-      background: var(--glass-border);
-    }
-
-    .heading-readout {
-      font-size: 15px;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-      min-width: 44px;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    .gps-pill {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .gps-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--warn-color);
-      box-shadow: 0 0 8px var(--warn-color);
-    }
-    .gps-dot.locked {
-      background: var(--ok-color);
-      box-shadow: 0 0 8px var(--ok-color);
-    }
-
-    /* 2. ÜST ALT KAPSÜLLER (RAKIM & HARİTA MODLARI) */
+    .c-tick-line { width: 1px; height: 6px; background: var(--text-muted); opacity: 0.6; }
+    .c-tick-line.major { height: 10px; width: 1.5px; background: var(--text-main); opacity: 0.9; }
+    .hud-divider { width: 1px; height: 20px; background: var(--glass-border); }
+    .heading-readout { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; cursor: pointer; }
+    .gps-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn-color); box-shadow: 0 0 8px var(--warn-color); }
+    .gps-dot.locked { background: var(--ok-color); box-shadow: 0 0 8px var(--ok-color); }
     .sub-hud-row {
-      position: absolute;
-      top: 60px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      pointer-events: none;
-      z-index: 950;
+      position: absolute; top: 60px; left: 10px; right: 10px;
+      display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; z-index: 950;
     }
-
     .mini-pill {
-      pointer-events: auto;
-      height: 36px;
-      border-radius: 18px;
-      padding: 0 13px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-main);
-      cursor: pointer;
+      pointer-events: auto; height: 36px; border-radius: 18px; padding: 0 13px;
+      display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--text-main); cursor: pointer;
     }
-
-    /* HARİTA MODLARI AÇILIR KARTI */
-    .map-modes-wrapper {
-      position: relative;
-      pointer-events: auto;
-    }
-
+    .map-modes-wrapper { position: relative; pointer-events: auto; }
     .modes-popover {
-      position: absolute;
-      top: 44px;
-      right: 0;
-      width: 224px;
-      border-radius: 18px;
-      padding: 10px;
-      display: none;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      z-index: 1100;
+      position: absolute; top: 44px; right: 0; width: 224px; border-radius: 18px; padding: 10px;
+      display: none; grid-template-columns: repeat(2, 1fr); gap: 8px; z-index: 1100;
     }
     .modes-popover.open { display: grid; }
-
     .mode-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      padding: 6px;
-      border-radius: 12px;
-      background: var(--glass-card);
-      border: 2px solid transparent;
-      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 6px;
+      border-radius: 12px; background: var(--glass-card); border: 2px solid transparent; cursor: pointer;
     }
-    .mode-card.active {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    .mode-thumb {
-      width: 100%;
-      height: 46px;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
-    }
-    .thumb-sat {
-      background: radial-gradient(circle at 30% 40%, #365314, #14532d 55%, #1c1917);
-    }
-    .thumb-topo {
-      background: #27272a;
-      background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 6px, rgba(255,255,255,0.22) 7px);
-    }
-    .thumb-terrain {
-      background: linear-gradient(135deg, #4d7c0f 0%, #a16207 50%, #3f6212 100%);
-    }
-    .thumb-grid {
-      background: #0f172a;
-      background-image: linear-gradient(to right, rgba(56,189,248,0.3) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(56,189,248,0.3) 1px, transparent 1px);
-      background-size: 12px 12px;
-    }
-
-    .mode-card span {
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    /* 3. ORTA SAĞ YUVARLAK İKON BUTONLARI */
+    .mode-card.active { border-color: var(--accent-blue); box-shadow: 0 0 12px var(--accent-glow); }
+    .mode-thumb { width: 100%; height: 44px; border-radius: 8px; }
+    .thumb-sat { background: radial-gradient(circle at 30% 40%, #365314, #14532d 55%, #1c1917); }
+    .thumb-topo { background: #27272a; background-image: repeating-radial-gradient(circle at 50% 50%, transparent 0, transparent 6px, rgba(255,255,255,0.22) 7px); }
+    .thumb-terrain { background: linear-gradient(135deg, #4d7c0f 0%, #a16207 50%, #3f6212 100%); }
+    .thumb-grid { background: #0f172a; background-image: linear-gradient(to right, rgba(56,189,248,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(56,189,248,0.3) 1px, transparent 1px); background-size: 12px 12px; }
+    .mode-card span { font-size: 11px; font-weight: 700; }
     .right-fab-stack {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 900;
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px; z-index: 900;
     }
-
     .circle-fab {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-main);
-      cursor: pointer;
+      width: 46px; height: 46px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; color: var(--text-main); cursor: pointer;
     }
-    .circle-fab:active { transform: scale(0.94); }
-
-    /* 4. iOS 26 LIQUID GLASS AYRIK ALT DOCK */
     .bottom-dock-container {
-      position: absolute;
-      bottom: 14px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 1000;
+      position: absolute; bottom: 14px; left: 10px; right: 10px;
+      display: flex; align-items: center; gap: 10px; z-index: 1000;
     }
-
     .dock-pill {
-      flex: 1;
-      height: 62px;
-      border-radius: 31px;
-      padding: 5px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2px;
+      flex: 1; height: 62px; border-radius: 31px; padding: 5px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
     }
-
     .dock-item {
-      border-radius: 26px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      color: var(--text-main);
-      opacity: 0.78;
-      cursor: pointer;
-      transition: all 0.18s ease;
+      border-radius: 26px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px; color: var(--text-main); opacity: 0.78; cursor: pointer;
     }
-
-    .dock-item.active {
-      opacity: 1;
-      background: var(--accent-blue);
-      color: #ffffff;
-      box-shadow: 0 0 16px var(--accent-glow);
-    }
-
-    .dock-item span {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1px;
-    }
-
+    .dock-item.active { opacity: 1; background: var(--accent-blue); color: #ffffff; box-shadow: 0 0 16px var(--accent-glow); }
+    .dock-item span { font-size: 10px; font-weight: 700; }
     .dock-plus-btn {
-      width: 62px;
-      height: 62px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      background: var(--glass-bg);
-      border: 1.5px solid var(--accent-blue);
-      box-shadow: 0 0 20px var(--accent-glow), 0 8px 20px rgba(0, 0, 0, 0.4);
-      cursor: pointer;
+      width: 62px; height: 62px; border-radius: 50%; flex-shrink: 0; display: flex;
+      align-items: center; justify-content: center; color: #ffffff; background: var(--glass-bg);
+      border: 1.5px solid var(--accent-blue); box-shadow: 0 0 20px var(--accent-glow), 0 8px 20px rgba(0,0,0,0.4); cursor: pointer;
     }
-    .dock-plus-btn:active { transform: scale(0.93); }
-
-    /* 5. GÖRÜNÜMLER ÇEKMECESİ (BOTTOM SHEET) */
-    .drawer-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 1200;
-      display: none;
-    }
+    .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1200; display: none; }
     .drawer-backdrop.open { display: block; }
-
     .views-drawer {
-      position: fixed;
-      left: 10px;
-      right: 10px;
-      bottom: 86px;
-      border-radius: 24px;
-      padding: 16px;
-      z-index: 1300;
-      display: none;
-      flex-direction: column;
-      gap: 14px;
+      position: fixed; left: 10px; right: 10px; bottom: 86px; border-radius: 24px; padding: 16px;
+      z-index: 1300; display: none; flex-direction: column; gap: 14px;
     }
     .views-drawer.open { display: flex; }
-
-    .drawer-section-title {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .theme-pills-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .pill-choice {
-      padding: 9px 6px;
-      border-radius: 14px;
-      background: var(--glass-card);
-      border: 1.5px solid transparent;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .pill-choice.active {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    .drawer-grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .drawer-card-btn {
-      padding: 11px 12px;
-      border-radius: 14px;
-      background: var(--glass-card);
-      border: 1px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* TOGGLE ANAHTARI (EKRAN KİLİDİ) */
-    .switch-wrap {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-    .switch-track {
-      width: 38px;
-      height: 22px;
-      border-radius: 11px;
-      background: var(--glass-card);
-      border: 1px solid var(--glass-border);
-      position: relative;
-      transition: background 0.2s;
-    }
-    .switch-track.on {
-      background: var(--accent-blue);
-    }
-    .switch-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #ffffff;
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.2s;
-    }
-    .switch-track.on .switch-thumb {
-      transform: translateX(16px);
-    }
-
-    /* BİLDİRİM TOAST */
-    .toast {
-      position: fixed;
-      top: 106px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 8px 14px;
-      border-radius: 16px;
-      font-size: 12px;
-      font-weight: 700;
-      z-index: 2000;
-      display: none;
-      white-space: nowrap;
-    }
+    .drawer-section-title { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .theme-pills-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .pill-choice { padding: 9px 6px; border-radius: 14px; background: var(--glass-card); border: 1.5px solid transparent; text-align: center; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .pill-choice.active { border-color: var(--accent-blue); box-shadow: 0 0 12px var(--accent-glow); }
+    .drawer-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .drawer-card-btn { padding: 11px 12px; border-radius: 14px; background: var(--glass-card); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .switch-wrap { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .switch-track { width: 38px; height: 22px; border-radius: 11px; background: var(--glass-card); border: 1px solid var(--glass-border); position: relative; }
+    .switch-track.on { background: var(--accent-blue); }
+    .switch-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ffffff; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; }
+    .switch-track.on .switch-thumb { transform: translateX(16px); }
+    .toast { position: fixed; top: 106px; left: 50%; transform: translateX(-50%); padding: 8px 14px; border-radius: 16px; font-size: 12px; font-weight: 700; z-index: 2000; display: none; white-space: nowrap; }
   </style>
 </head>
 <body data-theme="oled">
-
-  <!-- TAM EKRAN HARİTA -->
   <div id="map"></div>
   <div id="offlineGrid" class="offline-grid"></div>
 
-  <!-- 1. ÜST PUSULA VE GPS KAPSÜLÜ -->
   <div class="top-hud glass">
     <div class="compass-viewport" id="compassViewport">
       <div class="compass-center-pin"></div>
       <div class="compass-strip" id="compassStrip"></div>
     </div>
     <div class="hud-divider"></div>
-    <div class="heading-readout" id="headingVal" title="Koordinatı Kopyala">0°</div>
+    <div class="heading-readout" id="headingVal">0°</div>
     <div class="hud-divider"></div>
     <div class="gps-pill" id="gpsStatusBtn">
       <span class="gps-dot" id="gpsDot"></span>
@@ -549,114 +196,58 @@
     </div>
   </div>
 
-  <!-- 2. ÜST ALT KAPSÜLLER (RAKIM & HARİTA MODLARI) -->
   <div class="sub-hud-row">
-    <div class="mini-pill glass" id="altPill" title="Koordinatı Kopyala">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M14 6l-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22L14 6z"/>
-      </svg>
+    <div class="mini-pill glass" id="altPill">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 6l-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22L14 6z"/></svg>
       <span id="altVal">-- m</span>
     </div>
-
     <div class="map-modes-wrapper">
       <div class="mini-pill glass" id="mapModesBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-          <line x1="8" y1="2" x2="8" y2="18"></line>
-          <line x1="16" y1="6" x2="16" y2="22"></line>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
         <span>Harita Modları</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
       </div>
-
-      <!-- AÇILIR HARİTA MODLARI KARTI -->
       <div class="modes-popover glass" id="modesPopover">
-        <div class="mode-card active" data-layer="sat">
-          <div class="mode-thumb thumb-sat"></div>
-          <span>Uydu</span>
-        </div>
-        <div class="mode-card" data-layer="topo">
-          <div class="mode-thumb thumb-topo"></div>
-          <span>Topoğrafik</span>
-        </div>
-        <div class="mode-card" data-layer="terrain">
-          <div class="mode-thumb thumb-terrain"></div>
-          <span>Arazi</span>
-        </div>
-        <div class="mode-card" data-layer="grid">
-          <div class="mode-thumb thumb-grid"></div>
-          <span>Izgara</span>
-        </div>
+        <div class="mode-card active" data-layer="sat"><div class="mode-thumb thumb-sat"></div><span>Uydu</span></div>
+        <div class="mode-card" data-layer="topo"><div class="mode-thumb thumb-topo"></div><span>Topoğrafik</span></div>
+        <div class="mode-card" data-layer="terrain"><div class="mode-thumb thumb-terrain"></div><span>Arazi</span></div>
+        <div class="mode-card" data-layer="grid"><div class="mode-thumb thumb-grid"></div><span>Izgara</span></div>
       </div>
     </div>
   </div>
 
-  <!-- 3. ORTA SAĞ YUVARLAK İKON BUTONLARI -->
   <div class="right-fab-stack">
-    <div class="circle-fab glass" id="quickThemeBtn" title="Görünüm Teması">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-      </svg>
+    <div class="circle-fab glass" id="quickThemeBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
     </div>
-    <div class="circle-fab glass" id="centerMeBtn" title="Konumuma Odaklan">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <circle cx="12" cy="12" r="3"></circle>
-        <circle cx="12" cy="12" r="8"></circle>
-        <line x1="12" y1="2" x2="12" y2="4"></line>
-        <line x1="12" y1="20" x2="12" y2="22"></line>
-        <line x1="2" y1="12" x2="4" y2="12"></line>
-        <line x1="20" y1="12" x2="22" y2="12"></line>
-      </svg>
+    <div class="circle-fab glass" id="centerMeBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
     </div>
   </div>
 
-  <!-- 4. iOS 26 LIQUID GLASS AYRIK ALT DOCK -->
   <div class="bottom-dock-container">
     <div class="dock-pill glass">
       <div class="dock-item active" id="navMap">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-          <line x1="8" y1="2" x2="8" y2="18"></line>
-          <line x1="16" y1="6" x2="16" y2="22"></line>
-        </svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
         <span>Harita</span>
       </div>
       <div class="dock-item" id="navDraw">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-          <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-        </svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
         <span>Yol Çiz</span>
       </div>
       <div class="dock-item" id="navTrack">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-          <circle cx="6" cy="19" r="3"></circle>
-          <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
-          <circle cx="18" cy="5" r="3"></circle>
-        </svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg>
         <span>Rota Kaydı</span>
       </div>
       <div class="dock-item" id="navViews">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
         <span>Görünümler</span>
       </div>
     </div>
-
-    <div class="dock-plus-btn" id="quickAddPinBtn" title="Hızlı Nokta Ekle">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
+    <div class="dock-plus-btn" id="quickAddPinBtn">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </div>
   </div>
 
-  <!-- 5. GÖRÜNÜMLER ÇEKMECESİ -->
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <div class="views-drawer glass" id="viewsDrawer">
     <div>
@@ -673,28 +264,13 @@
         <div class="pill-choice" data-set-theme="red">Kırmızı Görüş</div>
       </div>
     </div>
-
     <div>
       <div class="drawer-section-title"><span>ŞAHSİ VERİLERİM</span></div>
       <div class="drawer-grid-2">
-        <div class="drawer-card-btn" id="drawerRoutesBtn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="6" cy="19" r="3"></circle>
-            <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
-            <circle cx="18" cy="5" r="3"></circle>
-          </svg>
-          <span>Yollarım (0)</span>
-        </div>
-        <div class="drawer-card-btn" id="drawerPinsBtn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <span>Noktalarım (0)</span>
-        </div>
+        <div class="drawer-card-btn" id="drawerRoutesBtn">Yollarım (0)</div>
+        <div class="drawer-card-btn" id="drawerPinsBtn">Noktalarım (0)</div>
       </div>
     </div>
-
     <div>
       <div class="drawer-section-title"><span>VERİ & HARİTA</span></div>
       <div class="drawer-grid-2">
@@ -706,4 +282,195 @@
 
   <div class="toast glass" id="toast"></div>
 
-  <script src="https://unpkg.com/
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.style.display = "block";
+      clearTimeout(window._tt);
+      window._tt = setTimeout(() => { t.style.display = "none"; }, 2600);
+    }
+
+    // PUSULA ŞERİDİ
+    const strip = document.getElementById("compassStrip");
+    const vp = document.getElementById("compassViewport");
+    const hVal = document.getElementById("headingVal");
+    const DIRS = { 0: "K", 45: "KD", 90: "D", 135: "GD", 180: "G", 225: "GB", 270: "B", 315: "KB" };
+
+    for (let d = -180; d <= 540; d += 5) {
+      const n = ((d % 360) + 360) % 360;
+      const el = document.createElement("div");
+      el.className = "c-tick";
+      const lbl = document.createElement("span");
+      lbl.className = "c-tick-label" + (n === 0 ? " north" : "");
+      lbl.innerHTML = DIRS[n] !== undefined ? DIRS[n] : (n % 15 === 0 ? n : "&nbsp;");
+      const ln = document.createElement("div");
+      ln.className = "c-tick-line" + (n % 15 === 0 ? " major" : "");
+      el.appendChild(lbl);
+      el.appendChild(ln);
+      strip.appendChild(el);
+    }
+
+    let curHeading = 0;
+    function setCompass(deg) {
+      curHeading = Math.round(((deg % 360) + 360) % 360);
+      hVal.textContent = curHeading + "°";
+      const w = vp.offsetWidth || 160;
+      strip.style.transform = `translateX(${(w / 2) - ((curHeading + 180) * 2) - 5}px)`;
+    }
+    setCompass(0);
+    window.addEventListener("resize", () => setCompass(curHeading));
+
+    let absLock = false;
+    window.addEventListener("deviceorientationabsolute", (e) => {
+      if (e.alpha !== null) { absLock = true; setCompass(360 - e.alpha); }
+    }, true);
+    window.addEventListener("deviceorientation", (e) => {
+      if (!absLock && e.alpha !== null) setCompass(360 - e.alpha);
+    }, true);
+
+    // HARİTA MOTORU
+    let map, userMarker, accCircle, tileLayer;
+    let lat = 36.8969, lng = 30.7133, acc = null, firstFix = false;
+    const LAYERS = {
+      sat: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", off: false },
+      topo: { url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", off: false },
+      terrain: { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", off: false },
+      grid: { url: "", off: true }
+    };
+
+    try {
+      if (typeof L !== "undefined") {
+        map = L.map("map", { zoomControl: false, attributionControl: false }).setView([lat, lng], 14);
+        tileLayer = L.tileLayer(LAYERS.sat.url, { maxZoom: 18 }).addTo(map);
+        userMarker = L.circleMarker([lat, lng], { radius: 8, fillColor: "#2563eb", color: "#fff", weight: 3, fillOpacity: 1 }).addTo(map);
+        accCircle = L.circle([lat, lng], { radius: 15, color: "#3b82f6", weight: 1, fillOpacity: 0.15 }).addTo(map);
+      } else {
+        document.getElementById("offlineGrid").classList.add("visible");
+      }
+    } catch (err) {
+      document.getElementById("offlineGrid").classList.add("visible");
+    }
+
+    const modesBtn = document.getElementById("mapModesBtn");
+    const pop = document.getElementById("modesPopover");
+    modesBtn.addEventListener("click", (e) => { e.stopPropagation(); pop.classList.toggle("open"); });
+    document.querySelectorAll(".mode-card").forEach(c => {
+      c.addEventListener("click", () => {
+        document.querySelectorAll(".mode-card").forEach(x => x.classList.remove("active"));
+        c.classList.add("active");
+        pop.classList.remove("open");
+        if (!map) return;
+        if (tileLayer) { map.removeLayer(tileLayer); tileLayer = null; }
+        const cfg = LAYERS[c.dataset.layer];
+        if (cfg.off) document.getElementById("offlineGrid").classList.add("visible");
+        else {
+          document.getElementById("offlineGrid").classList.remove("visible");
+          tileLayer = L.tileLayer(cfg.url, { maxZoom: 18 }).addTo(map);
+        }
+      });
+    });
+    document.addEventListener("click", (e) => { if (!pop.contains(e.target) && !modesBtn.contains(e.target)) pop.classList.remove("open"); });
+
+    // GPS KİLİDİ
+    function onPosSuccess(p) {
+      lat = p.coords.latitude;
+      lng = p.coords.longitude;
+      acc = Math.round(p.coords.accuracy);
+      document.getElementById("altVal").textContent = p.coords.altitude !== null ? Math.round(p.coords.altitude) + " m" : "-- m";
+      const dot = document.getElementById("gpsDot");
+      if (acc <= 25) dot.classList.add("locked"); else dot.classList.remove("locked");
+      if (map && userMarker) {
+        userMarker.setLatLng([lat, lng]);
+        accCircle.setLatLng([lat, lng]).setRadius(acc);
+        if (!firstFix) { map.setView([lat, lng], 16); firstFix = true; }
+      }
+    }
+
+    function onPosError(err) {
+      if (err && err.code === 1) showToast("Konum izni engelli: Adres çubuğundaki kilit simgesinden izin ver.");
+      else showToast("Uydu sinyali bekleniyor...");
+    }
+
+    let watchId = null;
+    function startGPS(manualTrigger) {
+      if (!("geolocation" in navigator)) { showToast("GPS desteklenmiyor."); return; }
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          onPosSuccess(p);
+          if (manualTrigger && map) map.flyTo([lat, lng], 16, { duration: 0.6 });
+          if (watchId === null) {
+            watchId = navigator.geolocation.watchPosition(onPosSuccess, onPosError, { enableHighAccuracy: true, maximumAge: 0 });
+          }
+        },
+        onPosError,
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    startGPS(false);
+
+    document.getElementById("centerMeBtn").addEventListener("click", () => startGPS(true));
+    document.getElementById("gpsStatusBtn").addEventListener("click", () => {
+      if (acc === null) startGPS(true);
+      else showToast(`Uydu: ±${acc}m • ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    });
+    document.getElementById("altPill").addEventListener("click", () => {
+      const txt = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      navigator.clipboard?.writeText(txt);
+      showToast("Kopyalandı: " + txt);
+    });
+
+    // TEMA & EKRAN KİLİDİ
+    const tOrder = ["oled", "daylight", "red"];
+    function setTheme(id) {
+      document.body.setAttribute("data-theme", id);
+      localStorage.setItem("vanguard_theme", id);
+      document.querySelectorAll("[data-set-theme]").forEach(el => el.classList.toggle("active", el.dataset.setTheme === id));
+    }
+    const st = localStorage.getItem("vanguard_theme");
+    if (st && tOrder.includes(st)) setTheme(st);
+    document.getElementById("quickThemeBtn").addEventListener("click", () => {
+      const cur = document.body.getAttribute("data-theme") || "oled";
+      setTheme(tOrder[(tOrder.indexOf(cur) + 1) % tOrder.length]);
+    });
+    document.querySelectorAll("[data-set-theme]").forEach(b => b.addEventListener("click", () => setTheme(b.dataset.setTheme)));
+
+    let wakeLock = null;
+    const wTrack = document.getElementById("wakeSwitchTrack");
+    document.getElementById("wakeLockToggle").addEventListener("click", async () => {
+      if (!("wakeLock" in navigator)) { showToast("Ekran kilidi desteklenmiyor."); return; }
+      try {
+        if (!wakeLock) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wTrack.classList.add("on");
+          showToast("Ekran açık kilidi aktif.");
+          wakeLock.addEventListener("release", () => { wakeLock = null; wTrack.classList.remove("on"); });
+        } else { await wakeLock.release(); wakeLock = null; }
+      } catch { showToast("Ekran kilidi açılamadı."); }
+    });
+
+    // GÖRÜNÜMLER ÇEKMECESİ
+    const drawer = document.getElementById("viewsDrawer");
+    const backdrop = document.getElementById("drawerBackdrop");
+    const navViews = document.getElementById("navViews");
+    const navMap = document.getElementById("navMap");
+    function toggleDrawer(open) {
+      drawer.classList.toggle("open", open);
+      backdrop.classList.toggle("open", open);
+      navViews.classList.toggle("active", open);
+      navMap.classList.toggle("active", !open);
+    }
+    navViews.addEventListener("click", () => toggleDrawer(!drawer.classList.contains("open")));
+    navMap.addEventListener("click", () => toggleDrawer(false));
+    backdrop.addEventListener("click", () => toggleDrawer(false));
+
+    ["navDraw", "navTrack", "quickAddPinBtn", "drawerRoutesBtn", "drawerPinsBtn", "drawerBackupBtn", "drawerKmlBtn"].forEach(id => {
+      document.getElementById(id).addEventListener("click", () => {
+        toggleDrawer(false);
+        showToast("2. ve 3. Aşamada aktif edilecek.");
+      });
+    });
+  </script>
+</body>
+</html>
