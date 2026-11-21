@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TERRA // Şahsi Saha Haritası</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f3f4f6;
+      --text: #000000;
+      --border: #000000;
+      --accent: #000000;
+      --accent-text: #ffffff;
+      --ok: #15803d;
+      --warn: #b45309;
+      --grid-line: rgba(0, 0, 0, 0.15);
+    }
+
+    [data-theme="oled"] {
+      --bg: #000000;
+      --surface: #111111;
+      --text: #f8fafc;
+      --border: #ffffff;
+      --accent: #f59e0b;
+      --accent-text: #000000;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --grid-line: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="red"] {
+      --bg: #000000;
+      --surface: #0a0000;
+      --text: #ef4444;
+      --border: #ef4444;
+      --accent: #ef4444;
+      --accent-text: #000000;
+      --ok: #ef4444;
+      --warn: #b91c1c;
+      --grid-line: rgba(239, 68, 68, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background-color: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--border);
+      background: var(--bg);
+      gap: 6px;
+      z-index: 1000;
+    }
+
+    .brand {
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    .top-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    button {
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 0.9fr;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      z-index: 1000;
+    }
+
+    .tele-box {
+      padding: 6px 8px;
+      border-right: 1.5px solid var(--border);
+    }
+
+    .tele-box:last-child {
+      border-right: none;
+    }
+
+    .tele-label {
+      font-size: 10px;
+      font-weight: 800;
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
+
+    .tele-val {
+      font-size: 14px;
+      font-weight: 900;
+      margin-top: 2px;
+      word-break: break-all;
+    }
+
+    .gps-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      border-bottom: 2px solid var(--border);
+      background: var(--bg);
+      z-index: 1000;
+    }
+
+    .badge-ok { color: var(--ok); }
+    .badge-warn { color: var(--warn); }
+
+    .map-wrapper {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      background: var(--bg);
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+    }
+
+    [data-theme="oled"] .leaflet-tile-pane {
+      filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(110%);
+    }
+
+    [data-theme="red"] .leaflet-tile-pane {
+      filter: invert(100%) sepia(100%) saturate(600%) hue-rotate(320deg) brightness(65%) contrast(130%);
+    }
+
+    .offline-grid-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 400;
+      display: none;
+    }
+
+    .offline-grid-overlay.visible {
+      display: block;
+    }
+
+    .map-floating-controls {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 800;
+    }
+
+    .map-floating-controls button {
+      padding: 10px 12px;
+      font-size: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .bottom-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      padding: 8px;
+      border-top: 2px solid var(--border);
+      background: var(--bg);
+      z-index: 1000;
+    }
+
+    .bottom-bar button {
+      padding: 12px 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--accent-text);
+      border: 2px solid var(--border);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 900;
+      border-radius: 4px;
+      z-index: 2000;
+      display: none;
+    }
+  </style>
+</head>
+<body data-theme="daylight">
+
+  <div class="top-bar">
+    <div class="brand">TERRA // SAHA v1</div>
+    <div class="top-controls">
+      <button id="themeBtn">TEMA: GÜNEŞ</button>
+      <button id="wakeBtn">EKRAN: NORMAL</button>
+    </div>
+  </div>
+
+  <div class="telemetry-grid">
+    <div class="tele-box" id="copyCoordBox" title="Kopyalamak için dokun">
+      <div class="tele-label">KOORDİNAT (DOKUN KOPYALA)</div>
+      <div class="tele-val" id="coordVal">Uydu Aranıyor...</div>
+    </div>
+    <div class="tele-box">
+      <div class="tele-label">RAKIM / HIZ</div>
+      <div class="tele-val" id="altSpeedVal">-- m | 0 km/s</div>
+    </div>
+    <div class="tele-box">
+      <div class="tele-label">PUSULA YÖNÜ</div>
+      <div class="tele-val" id="compassVal">--°</div>
+    </div>
+  </div>
+
+  <div class="gps-status">
+    <span id="gpsLockText" class="badge-warn">● UYDU SİNYALİ BEKLENİYOR</span>
+    <span id="layerStatusText">ALTLIK: TOPOĞRAFİK</span>
+  </div>
+
+  <div class="map-wrapper">
+    <div id="map"></div>
+    <div id="offlineGrid" class="offline-grid-overlay"></div>
+
+    <div class="map-floating-controls">
+      <button id="centerMeBtn">◎ KONUMUMA GİT</button>
+      <button id="layerSwitchBtn">◫ HARİTA KATMANI</button>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button id="btnTrackStub" class="active">● ROTA KAYDI (Adım 2)</button>
+    <button id="btnDrawStub">✎ YOL ÇİZ (Adım 2)</button>
+    <button id="btnPinStub">+ NOKTA EKLE (Adım 3)</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.style.display = "block";
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => { t.style.display = "none"; }, 2400);
+    }
+
+    const themes = [
+      { id: "daylight", label: "TEMA: GÜNEŞ" },
+      { id: "oled", label: "TEMA: GECE" },
+      { id: "red", label: "TEMA: KIRMIZI" }
+    ];
+    let themeIdx = 0;
+    const themeBtn = document.getElementById("themeBtn");
+
+    themeBtn.addEventListener("click", () => {
+      themeIdx = (themeIdx + 1) % themes.length;
+      document.body.setAttribute("data-theme", themes[themeIdx].id);
+      themeBtn.textContent = themes[themeIdx].label;
+      localStorage.setItem("terra_theme", themes[themeIdx].id);
+    });
+
+    const savedTheme = localStorage.getItem("terra_theme");
+    if (savedTheme) {
+      const found = themes.findIndex(t => t.id === savedTheme);
+      if (found !== -1) {
+        themeIdx = found;
+        document.body.setAttribute("data-theme", savedTheme);
+        themeBtn.textContent = themes[themeIdx].label;
+      }
+    }
+
+    let wakeLock = null;
+    const wakeBtn = document.getElementById("wakeBtn");
+    wakeBtn.addEventListener("click", async () => {
+      if (!("wakeLock" in navigator)) {
+        showToast("Tarayıcı ekran kilidini desteklemiyor.");
+        return;
+      }
+      try {
+        if (!wakeLock) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeBtn.textContent = "EKRAN: AÇIK KİLİT";
+          wakeBtn.classList.add("active");
+          showToast("Ekran kapanması engellendi.");
+          wakeLock.addEventListener("release", () => {
+            wakeLock = null;
+            wakeBtn.textContent = "EKRAN: NORMAL";
+            wakeBtn.classList.remove("active");
+          });
+        } else {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      } catch (err) {
+        showToast("Ekran kilidi açılamadı.");
+      }
+    });
+
+    let map, userMarker, accuracyCircle;
+    let currentLat = 36.8969;
+    let currentLng = 30.7133;
+    let hasFirstFix = false;
+
+    const tileLayers = [
+      {
+        name: "TOPOĞRAFİK (EĞİM/PATİKA)",
+        url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+        offline: false
+      },
+      {
+        name: "UYDU GÖRÜNÜMÜ",
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        offline: false
+      },
+      {
+        name: "ÇEVRİMDIŞI KOORDİNAT IZGARASI",
+        url: "",
+        offline: true
+      }
+    ];
+    let currentLayerIdx = 0;
+    let activeTileLayer = null;
+
+    if (typeof L !== "undefined") {
+      map = L.map("map", { zoomControl: false }).setView([currentLat, currentLng], 14);
+      activeTileLayer = L.tileLayer(tileLayers[0].url, { maxZoom: 18 }).addTo(map);
+
+      userMarker = L.circleMarker([currentLat, currentLng], {
+        radius: 8,
+        fillColor: "#2563eb",
+        color: "#ffffff",
+        weight: 3,
+        fillOpacity: 1
+      }).addTo(map);
+
+      accuracyCircle = L.circle([currentLat, currentLng], {
+        radius: 20,
+        color: "#2563eb",
+        weight: 1,
+        fillOpacity: 0.12
+      }).addTo(map);
+    } else {
+      document.getElementById("offlineGrid").classList.add("visible");
+      showToast("İnternet yok: Çevrimdışı ızgara aktif.");
+    }
+
+    document.getElementById("layerSwitchBtn").addEventListener("click", () => {
+      if (!map) return;
+      currentLayerIdx = (currentLayerIdx + 1) % tileLayers.length;
+      const selected = tileLayers[currentLayerIdx];
+      document.getElementById("layerStatusText").textContent = "ALTLIK: " + selected.name;
+
+      if (activeTileLayer) {
+        map.removeLayer(activeTileLayer);
+        activeTileLayer = null;
+      }
+
+      if (selected.offline) {
+        document.getElementById("offlineGrid").classList.add("visible");
+      } else {
+        document.getElementById("offlineGrid").classList.remove("visible");
+        activeTileLayer = L.tileLayer(selected.url, { maxZoom: 18 }).addTo(map);
+      }
+    });
+
+    document.getElementById("centerMeBtn").addEventListener("click", () => {
+      if (map) map.setView([currentLat, currentLng], 16);
+      showToast("Konuma odaklanıldı.");
+    });
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          currentLat = pos.coords.latitude;
+          currentLng = pos.coords.longitude;
+          const acc = Math.round(pos.coords.accuracy);
+          const alt = pos.coords.altitude !== null ? Math.round(pos.coords.altitude) + " m" : "-- m";
+          const speed = pos.coords.speed !== null ? Math.round(pos.coords.speed * 3.6) : 0;
+
+          document.getElementById("coordVal").textContent =
+            `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+          document.getElementById("altSpeedVal").textContent = `${alt} | ${speed} km/s`;
+
+          const lockEl = document.getElementById("gpsLockText");
+          if (acc <= 15) {
+            lockEl.textContent = `● UYDU KİLİTLİ (±${acc}m)`;
+            lockEl.className = "badge-ok";
+          } else {
+            lockEl.textContent = `▲ ZAYIF SİNYAL (±${acc}m)`;
+            lockEl.className = "badge-warn";
+          }
+
+          if (map && userMarker) {
+            userMarker.setLatLng([currentLat, currentLng]);
+            accuracyCircle.setLatLng([currentLat, currentLng]).setRadius(acc);
+            if (!hasFirstFix) {
+              map.setView([currentLat, currentLng], 16);
+              hasFirstFix = true;
+            }
+          }
+        },
+        (err) => {
+          document.getElementById("gpsLockText").textContent = "✕ GPS İZNİ KAPALI VEYA SİNYAL YOK";
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+      );
+    }
+
+    document.getElementById("copyCoordBox").addEventListener("click", () => {
+      const txt = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+      navigator.clipboard.writeText(txt);
+      showToast("Koordinat kopyalandı: " + txt);
+    });
+
+    function getDirectionLabel(deg) {
+      const dirs = ["K", "KD", "D", "GD", "G", "GB", "B", "KB"];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
+    let hasAbsoluteCompass = false;
+    window.addEventListener("deviceorientationabsolute", (e) => {
+      if (e.alpha !== null) {
+        hasAbsoluteCompass = true;
+        const heading = Math.round((360 - e.alpha) % 360);
+        document.getElementById("compassVal").textContent = `${heading}° ${getDirectionLabel(heading)}`;
+      }
+    }, true);
+
+    window.addEventListener("deviceorientation", (e) => {
+      if (hasAbsoluteCompass) return;
+      if (e.alpha !== null) {
+        const heading = Math.round((360 - e.alpha) % 360);
+        document.getElementById("compassVal").textContent = `${heading}° ${getDirectionLabel(heading)}`;
+      }
+    }, true);
+
+    ["btnTrackStub", "btnDrawStub", "btnPinStub"].forEach(id => {
+      document.getElementById(id).addEventListener("click", () => {
+        showToast("Bu modül Adım 2 ve 3'te aktif edilecek.");
+      });
+    });
+  </script>
+</body>
+</html>
