@@ -24,10 +24,16 @@ const fs=require('node:fs/promises');
  await page.locator("#map").click({position:{x:175,y:290}});
  await page.waitForFunction(()=>document.querySelector("#drawCount").textContent.includes("2 nokta"));
  await click("nameRoad");await page.locator("#roadName").fill("İlk patika");await click("finishRoad");
- await click("navViews");await click("drawerBackupBtn");
+ await click("navViews");await click("offlineManager");
+ for(const kind of ["terrain","sat"]){
+  await page.locator("#regionName").fill("Termessos "+kind);await page.locator("#regionType").selectOption(kind);
+  await click("getRegion");await page.waitForFunction(()=>!document.querySelector("#getRegion").disabled,null,{timeout:90000});
+  assert.match(await page.locator("#dataMessage").textContent(),/Bölge telefonda hazır/);console.log(kind+" online map saved");
+ }
+ await click("dataClose");await click("navViews");await click("drawerBackupBtn");
  const wait=page.waitForEvent("download");await click("fullOut");const backup=JSON.parse(await fs.readFile(await (await wait).path(),"utf8"));
- assert.equal(backup.roads.length,1);assert.equal(backup.pins[0].photos[0].caption,"Manzara");
- await ctx.setOffline(true);await page.reload({waitUntil:"domcontentloaded"});await page.waitForFunction(()=>ready&&pins.length===1);
+ assert.equal(backup.regions.length,2);assert.equal(backup.roads.length,1);assert.equal(backup.pins[0].photos[0].caption,"Manzara");
+ await ctx.setOffline(true);await page.reload({waitUntil:"domcontentloaded"});await page.waitForFunction(()=>ready&&pins.length===1&&regions.length===2);
  await click("quickAddPinBtn");await page.locator("#pinRows button").first().click();await page.locator("#pinCard img").waitFor();
  console.log("Road, photo/per-photo note, JSON backup, cold offline reload and pin read passed.");
  const other=await browser.newContext();const fresh=await other.newPage();
