@@ -15,7 +15,7 @@ const fs=require('node:fs/promises');
  await click("quickAddPinBtn");await click("atCenter");
  await page.locator("#pinName").fill("Geyikbayırı kamp");
  await page.locator("#pinText").fill("Sırtın güney yamacı.");
- await page.locator("#newPhotos").setInputFiles({name:"saha.png",mimeType:"image/png",buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aDT8AAAAASUVORK5CYII=","base64")});
+ await page.locator("#newPhotos").setInputFiles({name:"saha.png",mimeType:"image/png",buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAABAAAAAMCAIAAADkharWAAAAFUlEQVR4nGP8z0AaYCJR/aiGEaMBAGavARexRZOyAAAAAElFTkSuQmCC","base64")});
  await page.locator("#pinPhotos input").fill("Manzara");
  await click("savePin");await page.locator("#pinCard img").waitFor();await click("closeJournal");
  await click("navDraw");

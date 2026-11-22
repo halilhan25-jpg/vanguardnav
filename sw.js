@@ -1,5 +1,5 @@
 const base = new URL("./", self.location);
-const version = "vanguardnav-shell-7ef315deea2a";
+const version = "vanguardnav-shell-71b4c4309312";
 const entry = new URL("index.html", base).href;
 self.addEventListener("install", event => event.waitUntil((async () => {
   const cache = await caches.open(version);

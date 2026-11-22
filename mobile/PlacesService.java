@@ -7,12 +7,16 @@ import androidx.car.app.model.*;
 import androidx.car.app.validation.HostValidator;
 import org.json.*;
 public class PlacesService extends CarAppService {
- @NonNull @Override public HostValidator createHostValidator(){return HostValidator.ALLOW_ALL_HOSTS_VALIDATOR;}
+ @NonNull @Override public HostValidator createHostValidator(){return new HostValidator.Builder(this).addAllowedHosts(androidx.car.app.R.array.hosts_allowlist_sample).build();}
  @NonNull @Override public Session onCreateSession(){
   return new Session(){@NonNull @Override public Screen onCreateScreen(@NonNull Intent intent){
    return new Screen(getCarContext()){@NonNull @Override public Template onGetTemplate(){
     ItemList.Builder list=new ItemList.Builder();
     list.setNoItemsMessage("Telefonda seyyah defterine bir nokta ekle.");
+    if(getCarContext().getCarAppApiLevel()>=7){
+     list.addItem(new Row.Builder().setTitle("Saha haritası").setBrowsable(true).setOnClickListener(()->
+       getScreenManager().push(new FieldMapScreen(getCarContext()))).build());
+    }
     try{
      JSONArray points=new JSONArray(getCarContext().getSharedPreferences("car",0).getString("places","[]"));
      for(int i=0;i<Math.min(6,points.length());i++){
@@ -23,7 +27,7 @@ public class PlacesService extends CarAppService {
       }).build());
      }
     }catch(JSONException ignored){}
-    return new PlaceListMapTemplate.Builder().setTitle("VanguardNav · Saha noktaları").setItemList(list.build()).setHeaderAction(Action.APP_ICON).build();
+    return new ListTemplate.Builder().setTitle("VanguardNav · Saha noktaları").setItemList(list.build()).setHeaderAction(Action.APP_ICON).build();
    }};
   }};
  }

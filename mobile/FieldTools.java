@@ -37,9 +37,22 @@ public class FieldTools extends Plugin {
   if(!TrailService.clear(getContext(),call.getString("id",""))){call.reject("GPS taslağı değişti.");return;}
   call.resolve();
  }
+ static synchronized JSONObject readMap(Context c)throws Exception{
+  android.util.AtomicFile file=new android.util.AtomicFile(new File(c.getFilesDir(),"car-map.json"));
+  if(!file.getBaseFile().exists())return new JSONObject();
+  return new JSONObject(new String(file.readFully(),StandardCharsets.UTF_8));
+ }
  @PluginMethod public void syncPlaces(PluginCall call){
   JSArray places=call.getArray("places");if(places==null){call.reject("Noktalar eksik.");return;}
-  getContext().getSharedPreferences("car",0).edit().putString("places",places.toString()).apply();call.resolve();
+  try{
+   android.util.AtomicFile file=new android.util.AtomicFile(new File(getContext().getFilesDir(),"car-map.json"));
+   synchronized(FieldTools.class){
+    FileOutputStream out=file.startWrite();
+    try{JSONObject model=new JSONObject();model.put("pins",places);model.put("roads",call.getArray("roads"));model.put("regions",call.getArray("regions"));out.write(model.toString().getBytes(StandardCharsets.UTF_8));file.finishWrite(out);}
+    catch(Exception e){file.failWrite(out);throw e;}
+   }
+   getContext().getSharedPreferences("car",0).edit().putString("places",places.toString()).putLong("version",System.currentTimeMillis()).apply();call.resolve();
+  }catch(Exception e){call.reject("Motor ekranı verileri yazılamadı.",e);}
  }
  @PluginMethod public void saveDocument(PluginCall call){
   Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT).setType(call.getString("mime","application/octet-stream"));
