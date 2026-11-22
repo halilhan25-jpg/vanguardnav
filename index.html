@@ -2022,7 +2022,7 @@ field("atGps").onclick=()=>{if(!firstFix||Date.now()-lastPositionAt>60000){notic
 field("pickPin").onclick=()=>{journal.close();setDrawing(false);choosing=true;pauseFollow();showToast("Noktayı yerleştirmek için haritaya dokun.");};
 map?.on("click",e=>{if(choosing){choosing=false;const p=e.latlng.wrap();newPin([p.lat,p.lng]);}});
 const nativeField=window.Capacitor?.isNativePlatform?.()?window.Capacitor.Plugins.FieldTools:null;
-function syncCar(){if(nativeField)nativeField.syncPlaces({roads:roads.map(({points,breaks,color,source})=>({points,breaks,color,source})),regions:regions.map(({data,bounds})=>({data,bounds})),places:pins.map(p=>({name:p.name,lat:p.point[0],lng:p.point[1]}))}).catch(()=>{});}
+function syncCar(){if(nativeField)nativeField.syncPlaces({roads:roads.map(({points,breaks,details,source})=>({points,breaks,color:details?.color,source})),regions:regions.map(({data,bounds})=>({data,bounds})),places:pins.map(p=>({name:p.name,lat:p.point[0],lng:p.point[1]}))}).catch(()=>{});}
 function dataView(region){
  toggleDrawer(false);field("transferPane").hidden=region;field("regionPane").hidden=!region;
  notice("dataTitle",region?"Çevrimdışı bölgeler":"Yedek ve aktarım");notice("dataMessage","");
@@ -2045,6 +2045,9 @@ function xmlExport(format,paths,places){
 }
 async function exporting(format){
  try{await Promise.all([trackQueue,queue]);const snapshot=await roadStore.read();await fetchJournal();
+ if(format==="json"&&nativeField){const n=await nativeField.readTrack();
+ if(n.id&&n.points.length){if(snapshot.track&&snapshot.track.id!==n.id)throw Error("Tam yedek için önce bekleyen GPS rotasını kaydet.");
+ snapshot.track={id:n.id,revision:n.points.length,points:n.points,breaks:n.breaks};}}
  const text=format==="json"?JSON.stringify({type:"vanguardnav.fieldbook",version:1,...snapshot,pins,regions}):xmlExport(format,snapshot.roads,pins);
  await writeFile("VanguardNav-"+new Date().toISOString().slice(0,10)+"."+format,{json:"application/json",kml:"application/vnd.google-earth.kml+xml",gpx:"application/gpx+xml"}[format],text);
  notice("dataMessage","Dosya hazırlandı.");}catch(e){notice("dataMessage",e.message);}

@@ -27,7 +27,7 @@ public class PlacesService extends CarAppService {
       }).build());
      }
     }catch(JSONException ignored){}
-    return new ListTemplate.Builder().setTitle("VanguardNav · Saha noktaları").setItemList(list.build()).setHeaderAction(Action.APP_ICON).build();
+    return new ListTemplate.Builder().setTitle("VanguardNav · Saha noktaları").setSingleList(list.build()).setHeaderAction(Action.APP_ICON).build();
    }};
   }};
  }
