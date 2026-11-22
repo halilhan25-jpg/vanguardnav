@@ -1,0 +1,26 @@
+name: VanguardNav Android
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['index.html', 'mobile/**', '.github/workflows/android.yml']
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: bash mobile/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VanguardNav-Android
+          path: dist/VanguardNav.apk
