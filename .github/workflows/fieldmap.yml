@@ -1,0 +1,30 @@
+name: VanguardNav yerel harita
+on:
+  workflow_dispatch:
+  push:
+    paths: ['fieldmap/**','.github/workflows/fieldmap.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JAVA_HOME: /usr/lib/jvm/temurin-21-jdk-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: organicmaps/organicmaps
+          ref: 0505203616f2205f7abbde614e0d71a83a01d1c9
+          path: engine
+          fetch-depth: 200
+          persist-credentials: false
+      - run: git -C engine submodule update --init --recursive --depth 1 --jobs 8
+      - run: python3 fieldmap/apply.py engine
+      - working-directory: engine/android
+        run: ./gradlew -Parm64 :app:assembleWebDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VanguardNav-Atlas
+          path: engine/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error

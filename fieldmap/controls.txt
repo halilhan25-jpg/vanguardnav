@@ -1,0 +1,39 @@
+  private Location fieldFix;
+  private Integer fieldHeading;
+  private android.widget.TextView fieldLabel;
+  private boolean fieldCollapsed;
+  private void fieldImmersive(){
+    androidx.core.view.WindowInsetsControllerCompat c=androidx.core.view.WindowCompat.getInsetsController(getWindow(),getWindow().getDecorView());
+    c.setSystemBarsBehavior(androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+    c.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+  }
+  @Override public void onWindowFocusChanged(boolean focused){
+    super.onWindowFocusChanged(focused);
+    if(focused)fieldImmersive();
+  }
+  private void installFieldControls(){
+    fieldCollapsed=getPreferences(0).getBoolean("collapsed",false);
+    android.widget.FrameLayout parent=findViewById(android.R.id.content);
+    fieldLabel=new android.widget.TextView(this);
+    fieldLabel.setTextColor(android.graphics.Color.WHITE);fieldLabel.setTextSize(14);
+    fieldLabel.setBackgroundColor(0xcc182027);fieldLabel.setGravity(android.view.Gravity.CENTER);
+    float d=getResources().getDisplayMetrics().density;
+    fieldLabel.setPadding((int)(12*d),(int)(8*d),(int)(12*d),(int)(8*d));
+    android.widget.FrameLayout.LayoutParams lp=new android.widget.FrameLayout.LayoutParams(-2,-2,android.view.Gravity.TOP|android.view.Gravity.CENTER_HORIZONTAL);
+    lp.topMargin=(int)(30*d);parent.addView(fieldLabel,lp);updateFieldLabel();
+    fieldLabel.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setItems(new String[]{"Seyyah defteri","Koordinatı kopyala",fieldCollapsed?"Saha bilgilerini göster":"Saha bilgilerini gizle"},(dialog,index)->{
+      if(index==2){fieldCollapsed=!fieldCollapsed;getPreferences(0).edit().putBoolean("collapsed",fieldCollapsed).apply();updateFieldLabel();return;}
+      MapObject place=mPlacePageViewModel.getMapObject().getValue();
+      double lat=place!=null?place.getLat():fieldFix!=null?fieldFix.getLatitude():Double.NaN;
+      double lon=place!=null?place.getLon():fieldFix!=null?fieldFix.getLongitude():Double.NaN;
+      if(index==0){startActivity(new android.content.Intent(this,FieldJournal.class).putExtra("lat",lat).putExtra("lon",lon));return;}
+      if(Double.isNaN(lat)){android.widget.Toast.makeText(this,"Konum bekleniyor",0).show();return;}
+      ((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("Koordinat",lat+", "+lon));
+    }).show());
+  }
+  private void updateFieldLabel(){
+    if(fieldLabel==null)return;
+    String coords=fieldFix==null?"Konum bekleniyor":String.format(java.util.Locale.US,"%.5f, %.5f",fieldFix.getLatitude(),fieldFix.getLongitude());
+    fieldLabel.setText(fieldCollapsed?"☰":(fieldHeading==null?"—":fieldHeading+"°")+"   "+(fieldFix!=null&&fieldFix.hasAltitude()?Math.round(fieldFix.getAltitude())+" m":"— m")+"   ☰\n"+coords);
+    fieldLabel.setContentDescription("Saha bilgileri ve seyyah defteri");
+  }
